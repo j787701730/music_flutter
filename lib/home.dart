@@ -44,7 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // 播放状态
     audioPlayer.onPlayerStateChanged.listen((AudioPlayerState s) {
-      print('Current player state: $s');
+      // print('Current player state: $s');
       if (s == AudioPlayerState.COMPLETED) {
         int index = musicList.indexOf(currPlay);
         if (index != musicList.length - 1) {
@@ -73,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // 错误事件
     audioPlayer.onPlayerError.listen((msg) {
-      print('audioPlayer error : $msg');
+      // print('audioPlayer error : $msg');
       _message('$msg');
     });
   }
