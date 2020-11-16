@@ -36,7 +36,7 @@ class _MyHomePageState extends State<MyHomePage> {
     //   // setState(() => duration = d);
     // });
 
-    //位置事件
+    //  位置事件
     // audioPlayer.onAudioPositionChanged.listen((Duration  p){
     // print('Current position: $p');
     //   setState(() => position = p);
