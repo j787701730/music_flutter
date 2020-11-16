@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:music_flutter/home.dart';
-import 'package:music_flutter/list-log.dart';
 
 void main() {
   runApp(MyApp());
@@ -64,7 +63,7 @@ class MyApp extends StatelessWidget {
             // cupertinoOverrideTheme: CupertinoThemeData(
             //   brightness: Brightness.light,
             // ),
-            // platform: TargetPlatform.iOS,
+            platform: TargetPlatform.android,
             visualDensity: VisualDensity.adaptivePlatformDensity,
             scaffoldBackgroundColor: Colors.white,
             textTheme: TextTheme(
@@ -86,7 +85,6 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         routes: <String, WidgetBuilder>{
           '/home': (_) => MyHomePage(),
-          '/log': (_) => ListLog(),
         },
       ),
       value: SystemUiOverlayStyle.dark,
