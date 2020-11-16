@@ -101,7 +101,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   /// 此方法返回本地文件地址
-  Future<File> _getLocalFile() async {
+  _getLocalFile() {
     try {
       Directory directory = Directory('/storage/emulated/0/Music/');
       if (directory.listSync() is List) {
