@@ -2,6 +2,8 @@
 
 本地音乐播放器flutter版
 
+音乐文件放在手机内存根目录下的Music文件夹(没有自己手动建), 当前仅支持mp3
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
