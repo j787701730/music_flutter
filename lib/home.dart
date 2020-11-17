@@ -200,13 +200,20 @@ class _MyHomePageState extends State<MyHomePage> {
                                 height: 44,
                                 alignment: Alignment.center,
                                 child: Icon(
-                                    playState == AudioPlayerState.PLAYING ? Icons.play_arrow_outlined : Icons.pause),
+                                  playState == null
+                                      ? Icons.play_arrow_outlined
+                                      : playState == AudioPlayerState.PLAYING
+                                          ? Icons.pause
+                                          : Icons.play_arrow_outlined,
+                                ),
                               ),
                               onTap: () {
                                 if (playState == AudioPlayerState.PLAYING) {
                                   audioPlayer.pause();
-                                } else {
+                                } else if (playState == AudioPlayerState.PAUSED) {
                                   audioPlayer.resume();
+                                } else {
+                                  playLocal(path);
                                 }
                               },
                             )
