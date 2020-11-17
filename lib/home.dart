@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -23,6 +24,8 @@ class _MyHomePageState extends State<MyHomePage> {
   AudioPlayer audioPlayer;
   String currPlay = '';
   AudioPlayerState playState;
+  StreamSubscription _playerStateSubscription;
+  StreamSubscription _playerErrorSubscription;
 
   @override
   void initState() {
@@ -43,21 +46,24 @@ class _MyHomePageState extends State<MyHomePage> {
     // });
 
     // 播放状态
-    audioPlayer.onPlayerStateChanged.listen((AudioPlayerState s) {
+    _playerStateSubscription = audioPlayer.onPlayerStateChanged.listen((AudioPlayerState s) {
       // print('Current player state: $s');
+      if (!mounted) return;
       if (s == AudioPlayerState.COMPLETED) {
-        int index = musicList.indexOf(currPlay);
-        if (index != musicList.length - 1) {
-          setState(() {
-            currPlay = musicList[index + 1];
-            playLocal(musicList[index + 1]);
-          });
-        } else {
-          setState(() {
-            currPlay = musicList[0];
-            playLocal(musicList[0]);
-          });
-        }
+        audioPlayer.release().then((value) {
+          int index = musicList.indexOf(currPlay);
+          if (index != musicList.length - 1) {
+            setState(() {
+              currPlay = musicList[index + 1];
+              playLocal(musicList[index + 1]);
+            });
+          } else {
+            setState(() {
+              currPlay = musicList[0];
+              playLocal(musicList[0]);
+            });
+          }
+        });
       }
       setState(() {
         playState = s;
@@ -72,7 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // });
 
     // 错误事件
-    audioPlayer.onPlayerError.listen((msg) {
+    _playerErrorSubscription = audioPlayer.onPlayerError.listen((msg) {
       // print('audioPlayer error : $msg');
       _message('$msg');
     });
@@ -137,10 +143,17 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
-  void dispose() {
-    super.dispose();
+  void deactivate() {
     audioPlayer.stop();
+    super.deactivate();
+  }
+
+  @override
+  void dispose() {
     audioPlayer.dispose();
+    _playerStateSubscription?.cancel();
+    _playerErrorSubscription?.cancel();
+    super.dispose();
   }
 
   @override
