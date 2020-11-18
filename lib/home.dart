@@ -101,9 +101,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
   List musicList = [];
 
-  playLocal(path) async {
+  playLocal(path) {
     _setPlay(path);
-    await audioPlayer.play(path, isLocal: true);
+    audioPlayer.release().then((value) {
+      audioPlayer.play(path, isLocal: true);
+    });
   }
 
   /// 此方法返回本地文件地址
@@ -163,9 +165,35 @@ class _MyHomePageState extends State<MyHomePage> {
         key: _scaffoldKey,
         appBar: AppBar(
           elevation: 0,
-          title: Text('音乐播放器${musicList.length > 0 ? ' 共${musicList.length}首' : ''}'),
+          title: Text('${musicList.length > 0 ? ' 共${musicList.length}首' : ''}'),
           centerTitle: true,
           actions: [
+            IconButton(
+              icon: Icon(
+                playState == null
+                    ? Icons.play_arrow_outlined
+                    : playState == AudioPlayerState.PLAYING
+                        ? Icons.pause
+                        : Icons.play_arrow_outlined,
+              ),
+              onPressed: () {
+                if (playState == AudioPlayerState.PLAYING) {
+                  audioPlayer.pause();
+                } else if (playState == AudioPlayerState.PAUSED) {
+                  audioPlayer.resume();
+                } else {
+                  if (musicList.isNotEmpty) {
+                    if (musicList.contains(currPlay)) {
+                      playLocal(currPlay);
+                    } else {
+                      playLocal(musicList[0]);
+                    }
+                  } else {
+                    _message('无歌曲可播放');
+                  }
+                }
+              },
+            ),
             IconButton(
               icon: Icon(Icons.refresh_outlined),
               onPressed: _getLocalFile,
@@ -175,65 +203,41 @@ class _MyHomePageState extends State<MyHomePage> {
         body: ListView.builder(
           itemBuilder: (context, index) {
             String path = musicList[index];
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
+            return ListTile(
               onTap: () {
                 playLocal(path);
                 setState(() {
                   currPlay = path;
                 });
               },
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Color(0xffdddddd),
-                    ),
-                  ),
-                ),
-                height: 45,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 15),
-                        child: Text(
-                          '${path.substring(path.lastIndexOf('/') + 1)}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+              title: Text(
+                '${path.substring(path.lastIndexOf('/') + 1)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: SizedBox(
+                width: 48,
+                child: currPlay == path
+                    ? IconButton(
+                        icon: Icon(
+                          playState == null
+                              ? Icons.play_arrow_outlined
+                              : playState == AudioPlayerState.PLAYING
+                                  ? Icons.pause
+                                  : Icons.play_arrow_outlined,
+                          color: Color(0xff000000),
                         ),
-                      ),
-                    ),
-                    Container(
-                      width: 44,
-                      child: currPlay == path
-                          ? GestureDetector(
-                              child: Container(
-                                width: 44,
-                                height: 44,
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  playState == null
-                                      ? Icons.play_arrow_outlined
-                                      : playState == AudioPlayerState.PLAYING
-                                          ? Icons.pause
-                                          : Icons.play_arrow_outlined,
-                                ),
-                              ),
-                              onTap: () {
-                                if (playState == AudioPlayerState.PLAYING) {
-                                  audioPlayer.pause();
-                                } else if (playState == AudioPlayerState.PAUSED) {
-                                  audioPlayer.resume();
-                                } else {
-                                  playLocal(path);
-                                }
-                              },
-                            )
-                          : Container(),
-                    )
-                  ],
-                ),
+                        onPressed: () {
+                          if (playState == AudioPlayerState.PLAYING) {
+                            audioPlayer.pause();
+                          } else if (playState == AudioPlayerState.PAUSED) {
+                            audioPlayer.resume();
+                          } else {
+                            playLocal(path);
+                          }
+                        },
+                      )
+                    : SizedBox(),
               ),
             );
           },
