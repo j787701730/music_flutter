@@ -79,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // 错误事件
     _playerErrorSubscription = audioPlayer.onPlayerError.listen((msg) {
-      // print('audioPlayer error : $msg');
+      // print('audioPlayer error: $msg');
       _message('$msg');
     });
   }
