@@ -110,7 +110,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // 播放状态
     _playerStateSubscription = audioPlayer.onPlayerStateChanged.listen((AudioPlayerState s) {
-      // print('Current player state: $s');
+      // print('Current player state: $s ');
       if (!mounted) return;
       setState(() {
         playState = s;
