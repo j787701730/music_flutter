@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -25,7 +26,6 @@ class _MyHomePageState extends State<MyHomePage> {
   StreamSubscription _playerErrorSubscription;
   StreamSubscription _playerCompleteSubscription;
   List musicList = [];
-  List dirs = ['/storage/emulated/0/Music/', '/storage/emulated/1/Music/'];
 
   _getPlay() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -44,20 +44,27 @@ class _MyHomePageState extends State<MyHomePage> {
 
   playLocal(path) async {
     _setPlay(path);
+    setState(() {
+      currPlay = path;
+    });
     await audioPlayer.play(path, isLocal: true);
   }
 
   /// 此方法返回本地文件地址
   _getLocalFile() async {
     List arr = [];
-    for (var dir in dirs) {
+    List<Directory> a = await getExternalStorageDirectories();
+    for (var o in a) {
+      String dir = o.path.substring(0, o.path.indexOf('Android')) + 'Music/';
       if (await FileSystemEntity.isDirectory(dir)) {
         Directory directory = Directory(dir);
         if (directory.listSync() is List) {
           directory.listSync().forEach((element) {
             String path = element.path;
             if (['mp3'].contains(path.substring(path.lastIndexOf('.') + 1))) {
-              arr.add(element.path);
+              if (!arr.contains(element.path)) {
+                arr.add(element.path);
+              }
             }
           });
         }
@@ -90,12 +97,10 @@ class _MyHomePageState extends State<MyHomePage> {
     int index = musicList.indexOf(currPlay);
     if (index != musicList.length - 1) {
       setState(() {
-        currPlay = musicList[index + 1];
         playLocal(musicList[index + 1]);
       });
     } else if (musicList.isNotEmpty) {
       setState(() {
-        currPlay = musicList[0];
         playLocal(musicList[0]);
       });
     }
@@ -192,9 +197,6 @@ class _MyHomePageState extends State<MyHomePage> {
             return ListTile(
               onTap: () {
                 playLocal(path);
-                setState(() {
-                  currPlay = path;
-                });
               },
               title: Text(
                 '${path.substring(path.lastIndexOf('/') + 1)}',

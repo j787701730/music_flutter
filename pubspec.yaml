@@ -29,7 +29,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.0
   # 读取本地目录
-  #  path_provider: ^1.6.24
+  path_provider: ^1.6.24
   # 播放器
   audioplayers: ^0.16.2
   # 缓存数据
