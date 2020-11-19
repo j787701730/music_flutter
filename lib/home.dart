@@ -16,9 +16,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Map nowData = {};
-  List sevenDayData = [];
-  List hoursData = [];
   DateTime _lastQuitTime;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   AudioPlayer audioPlayer;
@@ -26,63 +23,9 @@ class _MyHomePageState extends State<MyHomePage> {
   AudioPlayerState playState;
   StreamSubscription _playerStateSubscription;
   StreamSubscription _playerErrorSubscription;
-
-  @override
-  void initState() {
-    super.initState();
-    audioPlayer = AudioPlayer();
-    _getLocalFile();
-    _getPlay();
-    // 音频长度
-    // audioPlayer.onDurationChanged.listen((Duration d) {
-    //   print('Max duration: $d');
-    //   // setState(() => duration = d);
-    // });
-
-    // 位置事件
-    // audioPlayer.onAudioPositionChanged.listen((Duration  p){
-    // print('Current position: $p');
-    //   setState(() => position = p);
-    // });
-
-    // 播放状态
-    _playerStateSubscription = audioPlayer.onPlayerStateChanged.listen((AudioPlayerState s) {
-      // print('Current player state: $s');
-      if (!mounted) return;
-      if (s == AudioPlayerState.COMPLETED) {
-        audioPlayer.release().then((value) {
-          int index = musicList.indexOf(currPlay);
-          if (index != musicList.length - 1) {
-            setState(() {
-              currPlay = musicList[index + 1];
-              playLocal(musicList[index + 1]);
-            });
-          } else {
-            setState(() {
-              currPlay = musicList[0];
-              playLocal(musicList[0]);
-            });
-          }
-        });
-      }
-      setState(() {
-        playState = s;
-      });
-    });
-    //
-    // audioPlayer.onPlayerCompletion.listen((event) {
-    //   // onComplete();
-    //   // setState(() {
-    //   //   position = duration;
-    //   // });
-    // });
-
-    // 错误事件
-    _playerErrorSubscription = audioPlayer.onPlayerError.listen((msg) {
-      // print('audioPlayer error: $msg');
-      _message('$msg');
-    });
-  }
+  StreamSubscription _playerCompleteSubscription;
+  List musicList = [];
+  List dirs = ['/storage/emulated/0/Music/', '/storage/emulated/1/Music/'];
 
   _getPlay() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -99,36 +42,34 @@ class _MyHomePageState extends State<MyHomePage> {
     prefs.setString('lastPlaySong', path);
   }
 
-  List musicList = [];
-
-  playLocal(path) {
+  playLocal(path) async {
     _setPlay(path);
-    audioPlayer.release().then((value) {
-      audioPlayer.play(path, isLocal: true);
-    });
+    await audioPlayer.play(path, isLocal: true);
   }
 
   /// 此方法返回本地文件地址
-  _getLocalFile() {
-    try {
-      Directory directory = Directory('/storage/emulated/0/Music/');
-      if (directory.listSync() is List) {
-        List arr = [];
-        directory.listSync().forEach((element) {
-          String path = element.path;
-          if (['mp3'].contains(path.substring(path.lastIndexOf('.') + 1))) {
-            arr.add(element.path);
-          }
-        });
-        setState(() {
-          musicList = arr;
-        });
+  _getLocalFile() async {
+    List arr = [];
+    for (var dir in dirs) {
+      if (await FileSystemEntity.isDirectory(dir)) {
+        Directory directory = Directory(dir);
+        if (directory.listSync() is List) {
+          directory.listSync().forEach((element) {
+            String path = element.path;
+            if (['mp3'].contains(path.substring(path.lastIndexOf('.') + 1))) {
+              arr.add(element.path);
+            }
+          });
+        }
       }
-    } catch (error) {
+    }
+    if (arr.isEmpty) {
+      _message('音乐文件放在手机存储或SD卡的Music下');
+    } else {
+      if (!mounted) return;
       setState(() {
-        musicList = [];
+        musicList = arr;
       });
-      _message('读取不到/storage/emulated/0/Music/');
     }
   }
 
@@ -144,6 +85,50 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  _playNext() {
+    if (!mounted) return;
+    int index = musicList.indexOf(currPlay);
+    if (index != musicList.length - 1) {
+      setState(() {
+        currPlay = musicList[index + 1];
+        playLocal(musicList[index + 1]);
+      });
+    } else if (musicList.isNotEmpty) {
+      setState(() {
+        currPlay = musicList[0];
+        playLocal(musicList[0]);
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    audioPlayer = AudioPlayer();
+    _getLocalFile();
+    _getPlay();
+
+    // 播放状态
+    _playerStateSubscription = audioPlayer.onPlayerStateChanged.listen((AudioPlayerState s) {
+      // print('Current player state: $s');
+      if (!mounted) return;
+      setState(() {
+        playState = s;
+      });
+    });
+    //
+    _playerCompleteSubscription = audioPlayer.onPlayerCompletion.listen((event) {
+      _playNext();
+    });
+
+    // 错误事件
+    _playerErrorSubscription = audioPlayer.onPlayerError.listen((msg) {
+      // print('audioPlayer error: $msg');
+      _message('$msg');
+      _playNext();
+    });
+  }
+
   @override
   void deactivate() {
     audioPlayer.stop();
@@ -155,6 +140,7 @@ class _MyHomePageState extends State<MyHomePage> {
     audioPlayer.dispose();
     _playerStateSubscription?.cancel();
     _playerErrorSubscription?.cancel();
+    _playerCompleteSubscription?.cancel();
     super.dispose();
   }
 
