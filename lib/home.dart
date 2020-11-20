@@ -199,7 +199,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 playLocal(path);
               },
               title: Text(
-                '${path.substring(path.lastIndexOf('/') + 1)}',
+                '${path.substring(path.lastIndexOf('/') + 1, path.lastIndexOf('.'))}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
