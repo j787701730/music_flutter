@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:gbk2utf8/gbk2utf8.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -50,6 +52,36 @@ class _MyHomePageState extends State<MyHomePage> {
     await audioPlayer.play(path, isLocal: true);
   }
 
+  _getMp3Info(path) {
+    final file = new File(path);
+    print(path);
+    List mp3Bytes = file.readAsBytesSync();
+    var _header = mp3Bytes.sublist(mp3Bytes.length - 128, mp3Bytes.length);
+    var _tag = _header.sublist(0, 3);
+    Map metaTags = {};
+
+    if (latin1.decode(_tag).toLowerCase() == 'tag') {
+      // metaTags['Version'] = '1.0';
+      var _title = _header.sublist(3, 33);
+      var _artist = _header.sublist(33, 63);
+      var _album = _header.sublist(63, 93);
+      var _year = _header.sublist(93, 97);
+      var _comment = _header.sublist(97, 127);
+      // var _genre = _header[127];
+      // print(utf8.decode(_title));
+      metaTags['Title'] = gbk.decode(_title).trim();
+      metaTags['Artist'] = gbk.decode(_artist).trim();
+      metaTags['Album'] = gbk.decode(_album).trim();
+      metaTags['Year'] = gbk.decode(_year).trim();
+      metaTags['Comment'] = gbk.decode(_comment).trim();
+      // metaTags['Genre'] = GENREv1[_genre];
+      metaTags.forEach((key, value) {
+        print(value);
+      });
+      return true;
+    }
+  }
+
   /// 此方法返回本地文件地址
   _getLocalFile() async {
     List arr = [];
@@ -64,6 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
             if (['mp3'].contains(path.substring(path.lastIndexOf('.') + 1))) {
               if (!arr.contains(element.path)) {
                 arr.add(element.path);
+                _getMp3Info(path);
               }
             }
           });
