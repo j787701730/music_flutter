@@ -269,6 +269,7 @@ class _MyHomePageState extends State<MyHomePage> {
               icon: Icon(Icons.timer),
               elevation: 1,
               onSelected: _timingOff,
+              tooltip: '定时关闭',
             ),
             IconButton(
               icon: Icon(Icons.refresh_outlined),
