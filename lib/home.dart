@@ -52,6 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
     await audioPlayer.play(path, isLocal: true);
   }
 
+  // 获取mp3文件信息
   _getMp3Info(path) {
     final file = new File(path);
     print(path);
@@ -96,7 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
             if (['mp3'].contains(path.substring(path.lastIndexOf('.') + 1))) {
               if (!arr.contains(element.path)) {
                 arr.add(element.path);
-                _getMp3Info(path);
+                // _getMp3Info(path);
               }
             }
           });
@@ -135,6 +136,25 @@ class _MyHomePageState extends State<MyHomePage> {
     } else if (musicList.isNotEmpty) {
       setState(() {
         playLocal(musicList[0]);
+      });
+    }
+  }
+
+  // 定时关闭
+  Timer _timer;
+
+  _timingOff(String time) {
+    if (_timer != null) {
+      _timer.cancel();
+      _timer = null;
+    }
+    if (time != '0') {
+      _timer = Timer(Duration(minutes: int.parse(time)), () {
+        if (audioPlayer != null) {
+          audioPlayer.pause();
+          _timer.cancel();
+          _timer = null;
+        }
       });
     }
   }
@@ -179,6 +199,9 @@ class _MyHomePageState extends State<MyHomePage> {
     _playerStateSubscription?.cancel();
     _playerErrorSubscription?.cancel();
     _playerCompleteSubscription?.cancel();
+    if (_timer != null) {
+      _timer.cancel();
+    }
     super.dispose();
   }
 
@@ -217,6 +240,35 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                 }
               },
+            ),
+            PopupMenuButton(
+              itemBuilder: (context) {
+                return <PopupMenuEntry<String>>[
+                  PopupMenuItem(
+                    child: Text('不开启'),
+                    value: '0',
+                  ),
+                  PopupMenuItem(
+                    child: Text('15分钟'),
+                    value: '15',
+                  ),
+                  PopupMenuItem(
+                    child: Text('30分钟'),
+                    value: '30',
+                  ),
+                  PopupMenuItem(
+                    child: Text('45分钟'),
+                    value: '45',
+                  ),
+                  PopupMenuItem(
+                    child: Text('60分钟'),
+                    value: '60',
+                  ),
+                ];
+              },
+              icon: Icon(Icons.timer),
+              elevation: 1,
+              onSelected: _timingOff,
             ),
             IconButton(
               icon: Icon(Icons.refresh_outlined),
