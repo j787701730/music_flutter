@@ -57,24 +57,25 @@ class MyApp extends StatelessWidget {
         title: '本地音乐播发器墨水屏版',
         themeMode: ThemeMode.light,
         theme: ThemeData(
-            // primarySwatch: Colors.blue,
-            primaryColor: Colors.white,
-            brightness: Brightness.light,
-            // cupertinoOverrideTheme: CupertinoThemeData(
-            //   brightness: Brightness.light,
-            // ),
-            platform: TargetPlatform.android,
-            visualDensity: VisualDensity.adaptivePlatformDensity,
-            scaffoldBackgroundColor: Colors.white,
-            textTheme: TextTheme(
-              bodyText2: TextStyle(
-                fontSize: 14,
-                color: Colors.black,
-              ),
+          // primarySwatch: Colors.blue,
+          primaryColor: Colors.white,
+          brightness: Brightness.light,
+          // cupertinoOverrideTheme: CupertinoThemeData(
+          //   brightness: Brightness.light,
+          // ),
+          platform: TargetPlatform.android,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+          scaffoldBackgroundColor: Colors.white,
+          textTheme: TextTheme(
+            bodyText2: TextStyle(
+              fontSize: 14,
+              color: Colors.black,
             ),
-            appBarTheme: AppBarTheme(
-              brightness: Brightness.light,
-            )),
+          ),
+          appBarTheme: AppBarTheme(
+            brightness: Brightness.light,
+          ),
+        ),
         home: MyHomePage(title: '本地音乐播发器墨水屏版'),
         builder: (context, child) {
           return ScrollConfiguration(

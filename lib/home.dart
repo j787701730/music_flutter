@@ -28,7 +28,10 @@ class _MyHomePageState extends State<MyHomePage> {
   StreamSubscription _playerErrorSubscription;
   StreamSubscription _playerCompleteSubscription;
   List musicList = [];
+  DateTime _dateTime;
+  int _duration = 0;
 
+  // 读取播放歌曲的记录
   _getPlay() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String lastPlaySong = prefs.getString('lastPlaySong');
@@ -39,11 +42,13 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  // 保存当前播放歌曲的记录
   _setPlay(path) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('lastPlaySong', path);
   }
 
+  // 播放歌曲
   playLocal(path) async {
     _setPlay(path);
     setState(() {
@@ -114,6 +119,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  // 提示信息
   _message(val) {
     _scaffoldKey.currentState.showSnackBar(
       SnackBar(
@@ -126,35 +132,26 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  _playNext() {
-    if (!mounted) return;
+  // 获取下一首歌曲
+  String _getNext() {
     int index = musicList.indexOf(currPlay);
     if (index != musicList.length - 1) {
-      setState(() {
-        playLocal(musicList[index + 1]);
-      });
-    } else if (musicList.isNotEmpty) {
-      setState(() {
-        playLocal(musicList[0]);
-      });
+      return musicList[index + 1];
+    } else {
+      return musicList[0];
     }
   }
 
-  // 定时关闭
-  Timer _timer;
+  // 播放下一首
+  _playNext() {
+    playLocal(_getNext());
+  }
 
-  _timingOff(String time) {
-    if (_timer != null) {
-      _timer.cancel();
-      _timer = null;
-    }
-    if (time != '0') {
-      _timer = Timer(Duration(minutes: int.parse(time)), () {
-        if (audioPlayer != null) {
-          audioPlayer.pause();
-          _timer.cancel();
-          _timer = null;
-        }
+  // 在点击播放时判断是否超时长了, 超则时长改为0
+  _durationCheck() {
+    if (_duration != 0 && DateTime.now().difference(_dateTime).inMinutes >= _duration) {
+      setState(() {
+        _duration = 0;
       });
     }
   }
@@ -174,9 +171,21 @@ class _MyHomePageState extends State<MyHomePage> {
         playState = s;
       });
     });
-    //
+    // 播放成功
     _playerCompleteSubscription = audioPlayer.onPlayerCompletion.listen((event) {
-      _playNext();
+      // 操过时长后关闭
+      if (_duration != 0 && DateTime.now().difference(_dateTime).inMinutes >= _duration) {
+        audioPlayer.pause();
+        if (!mounted) return;
+        String path = _getNext();
+        _setPlay(path);
+        setState(() {
+          currPlay = path;
+          _duration = 0;
+        });
+      } else {
+        _playNext();
+      }
     });
 
     // 错误事件
@@ -199,9 +208,6 @@ class _MyHomePageState extends State<MyHomePage> {
     _playerStateSubscription?.cancel();
     _playerErrorSubscription?.cancel();
     _playerCompleteSubscription?.cancel();
-    if (_timer != null) {
-      _timer.cancel();
-    }
     super.dispose();
   }
 
@@ -212,7 +218,8 @@ class _MyHomePageState extends State<MyHomePage> {
         key: _scaffoldKey,
         appBar: AppBar(
           elevation: 0,
-          title: Text('${musicList.length > 0 ? ' 共${musicList.length}首' : ''}'),
+          title: Text(
+              '${musicList.length > 0 ? ' 共${musicList.length}首歌曲' : ''} ${_duration == 0 ? '' : '定时$_duration分钟'}'),
           centerTitle: true,
           actions: [
             IconButton(
@@ -224,6 +231,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         : Icons.play_arrow_outlined,
               ),
               onPressed: () {
+                _durationCheck();
                 if (playState == AudioPlayerState.PLAYING) {
                   audioPlayer.pause();
                 } else if (playState == AudioPlayerState.PAUSED) {
@@ -268,7 +276,12 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               icon: Icon(Icons.timer),
               elevation: 1,
-              onSelected: _timingOff,
+              onSelected: (val) {
+                setState(() {
+                  _dateTime = DateTime.now();
+                  _duration = int.parse(val);
+                });
+              },
               tooltip: '定时关闭',
             ),
             IconButton(
@@ -282,6 +295,7 @@ class _MyHomePageState extends State<MyHomePage> {
             String path = musicList[index];
             return ListTile(
               onTap: () {
+                _durationCheck();
                 playLocal(path);
               },
               title: Text(
@@ -302,6 +316,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           color: Color(0xff000000),
                         ),
                         onPressed: () {
+                          _durationCheck();
                           if (playState == AudioPlayerState.PLAYING) {
                             audioPlayer.pause();
                           } else if (playState == AudioPlayerState.PAUSED) {
