@@ -147,7 +147,7 @@ class _MyHomePageState extends State<MyHomePage> {
     playLocal(_getNext());
   }
 
-  // 在点击播放时判断是否超时长了, 超则时长改为0
+  // 在点击播放时判断是否超时长了, 超则时长初始化为0
   _durationCheck() {
     if (_duration != 0 && DateTime.now().difference(_dateTime).inMinutes >= _duration) {
       setState(() {
