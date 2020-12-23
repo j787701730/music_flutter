@@ -74,6 +74,14 @@ class MyApp extends StatelessWidget {
           ),
           appBarTheme: AppBarTheme(
             brightness: Brightness.light,
+            // textTheme: TextTheme(
+            //   headline6: TextStyle(
+            //     fontSize: 18,
+            //     color: Colors.black,
+            //   ),
+            // ),
+            centerTitle: true,
+            elevation: 0,
           ),
         ),
         home: MyHomePage(title: '本地音乐播发器墨水屏版'),

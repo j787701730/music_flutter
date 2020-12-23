@@ -217,10 +217,7 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          elevation: 0,
-          title: Text(
-              '${musicList.length > 0 ? ' 共${musicList.length}首歌曲' : ''} ${_duration == 0 ? '' : '定时$_duration分钟'}'),
-          centerTitle: true,
+          title: Text('${musicList.length > 0 ? ' 共${musicList.length}首' : ''}'),
           actions: [
             IconButton(
               icon: Icon(
@@ -250,6 +247,7 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
             PopupMenuButton(
+              initialValue: '$_duration',
               itemBuilder: (context) {
                 return <PopupMenuEntry<String>>[
                   PopupMenuItem(
