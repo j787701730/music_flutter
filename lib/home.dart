@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:convert';
+// import 'dart:convert';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:gbk2utf8/gbk2utf8.dart';
+// import 'package:gbk2utf8/gbk2utf8.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -30,14 +30,22 @@ class _MyHomePageState extends State<MyHomePage> {
   List musicList = [];
   DateTime _dateTime;
   int _duration = 0;
+  int _mode = 1; // 1: 顺序循环, 2: 单曲循环
 
   // 读取播放歌曲的记录
   _getPlay() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String lastPlaySong = prefs.getString('lastPlaySong');
+    int mode = prefs.getInt('mode');
     if (lastPlaySong != null) {
       setState(() {
         currPlay = lastPlaySong;
+      });
+    }
+
+    if (mode != null) {
+      setState(() {
+        _mode = mode;
       });
     }
   }
@@ -46,6 +54,12 @@ class _MyHomePageState extends State<MyHomePage> {
   _setPlay(path) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('lastPlaySong', path);
+  }
+
+  // 保存当前播放歌曲的记录
+  _setMode(mode) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt('mode', int.parse(mode));
   }
 
   // 播放歌曲
@@ -58,35 +72,35 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   // 获取mp3文件信息
-  _getMp3Info(path) {
-    final file = new File(path);
-    print(path);
-    List mp3Bytes = file.readAsBytesSync();
-    var _header = mp3Bytes.sublist(mp3Bytes.length - 128, mp3Bytes.length);
-    var _tag = _header.sublist(0, 3);
-    Map metaTags = {};
-
-    if (latin1.decode(_tag).toLowerCase() == 'tag') {
-      // metaTags['Version'] = '1.0';
-      var _title = _header.sublist(3, 33);
-      var _artist = _header.sublist(33, 63);
-      var _album = _header.sublist(63, 93);
-      var _year = _header.sublist(93, 97);
-      var _comment = _header.sublist(97, 127);
-      // var _genre = _header[127];
-      // print(utf8.decode(_title));
-      metaTags['Title'] = gbk.decode(_title).trim();
-      metaTags['Artist'] = gbk.decode(_artist).trim();
-      metaTags['Album'] = gbk.decode(_album).trim();
-      metaTags['Year'] = gbk.decode(_year).trim();
-      metaTags['Comment'] = gbk.decode(_comment).trim();
-      // metaTags['Genre'] = GENREv1[_genre];
-      metaTags.forEach((key, value) {
-        print(value);
-      });
-      return true;
-    }
-  }
+  // _getMp3Info(path) {
+  //   final file = new File(path);
+  //   print(path);
+  //   List mp3Bytes = file.readAsBytesSync();
+  //   var _header = mp3Bytes.sublist(mp3Bytes.length - 128, mp3Bytes.length);
+  //   var _tag = _header.sublist(0, 3);
+  //   Map metaTags = {};
+  //
+  //   if (latin1.decode(_tag).toLowerCase() == 'tag') {
+  //     // metaTags['Version'] = '1.0';
+  //     var _title = _header.sublist(3, 33);
+  //     var _artist = _header.sublist(33, 63);
+  //     var _album = _header.sublist(63, 93);
+  //     var _year = _header.sublist(93, 97);
+  //     var _comment = _header.sublist(97, 127);
+  //     // var _genre = _header[127];
+  //     // print(utf8.decode(_title));
+  //     metaTags['Title'] = gbk.decode(_title).trim();
+  //     metaTags['Artist'] = gbk.decode(_artist).trim();
+  //     metaTags['Album'] = gbk.decode(_album).trim();
+  //     metaTags['Year'] = gbk.decode(_year).trim();
+  //     metaTags['Comment'] = gbk.decode(_comment).trim();
+  //     // metaTags['Genre'] = GENREv1[_genre];
+  //     metaTags.forEach((key, value) {
+  //       print(value);
+  //     });
+  //     return true;
+  //   }
+  // }
 
   /// 此方法返回本地文件地址
   _getLocalFile() async {
@@ -135,10 +149,14 @@ class _MyHomePageState extends State<MyHomePage> {
   // 获取下一首歌曲
   String _getNext() {
     int index = musicList.indexOf(currPlay);
-    if (index != musicList.length - 1) {
-      return musicList[index + 1];
+    if (_mode == 1) {
+      if (index != musicList.length - 1) {
+        return musicList[index + 1];
+      } else {
+        return musicList[0];
+      }
     } else {
-      return musicList[0];
+      return musicList[index];
     }
   }
 
@@ -245,6 +263,30 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                 }
               },
+            ),
+            PopupMenuButton(
+              initialValue: '$_mode',
+              itemBuilder: (context) {
+                return <PopupMenuEntry<String>>[
+                  PopupMenuItem(
+                    child: Text('顺序循环'),
+                    value: '1',
+                  ),
+                  PopupMenuItem(
+                    child: Text('单曲循环'),
+                    value: '2',
+                  ),
+                ];
+              },
+              icon: Icon(_mode == 1 ? Icons.repeat : Icons.repeat_one),
+              elevation: 1,
+              onSelected: (val) {
+                setState(() {
+                  _mode = int.parse(val);
+                  _setMode(val);
+                });
+              },
+              tooltip: '播放模式',
             ),
             PopupMenuButton(
               initialValue: '$_duration',
