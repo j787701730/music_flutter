@@ -13,42 +13,6 @@ void main() {
   }
 }
 
-/// 去掉 可滚动组件滑到顶部和尾部会有水波纹效果
-class RefreshScrollBehavior extends ScrollBehavior {
-  @override
-  Widget buildViewportChrome(BuildContext context, Widget child, AxisDirection axisDirection) {
-    switch (getPlatform(context)) {
-      case TargetPlatform.iOS:
-        return child;
-      case TargetPlatform.macOS:
-      case TargetPlatform.android:
-        return GlowingOverscrollIndicator(
-          child: child,
-          showLeading: false,
-          //顶部水波纹是否展示
-          showTrailing: false,
-          //底部水波纹是否展示
-          axisDirection: axisDirection,
-          notificationPredicate: (notification) {
-            if (notification.depth == 0) {
-              // 越界是否展示水波纹
-              if (notification.metrics.outOfRange) {
-                return false;
-              }
-              return true;
-            }
-            return false;
-          },
-          color: Theme.of(context).primaryColor,
-        );
-      case TargetPlatform.fuchsia:
-      case TargetPlatform.linux:
-      case TargetPlatform.windows:
-    }
-    return null;
-  }
-}
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -83,14 +47,26 @@ class MyApp extends StatelessWidget {
             centerTitle: true,
             elevation: 0,
           ),
+          bottomNavigationBarTheme: BottomNavigationBarThemeData(
+            selectedIconTheme: IconThemeData(
+              size: 20,
+            ),
+            unselectedIconTheme: IconThemeData(
+              size: 20,
+            ),
+            selectedItemColor: Colors.blue,
+            unselectedItemColor: Color(0xff333333),
+            showUnselectedLabels: true,
+            selectedLabelStyle: TextStyle(
+              fontSize: 12,
+            ),
+            unselectedLabelStyle: TextStyle(
+              fontSize: 12,
+            ),
+            elevation: 1,
+          ),
         ),
         home: MyHomePage(title: '本地音乐播发器墨水屏版'),
-        builder: (context, child) {
-          return ScrollConfiguration(
-            child: child,
-            behavior: RefreshScrollBehavior(),
-          );
-        },
         debugShowCheckedModeBanner: false,
         routes: <String, WidgetBuilder>{
           '/home': (_) => MyHomePage(),

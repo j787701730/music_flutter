@@ -1,10 +1,13 @@
 import 'dart:async';
+
 // import 'dart:convert';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:music_flutter/scrollNoWave.dart';
+
 // import 'package:gbk2utf8/gbk2utf8.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,6 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
   DateTime _dateTime;
   int _duration = 0;
   int _mode = 1; // 1: 顺序循环, 2: 单曲循环
+  int _navIndex = 1;
 
   // 读取播放歌曲的记录
   _getPlay() async {
@@ -135,7 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // 提示信息
   _message(val) {
-    _scaffoldKey.currentState.showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Container(
           height: 34,
@@ -330,47 +334,110 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ],
         ),
-        body: ListView.builder(
-          itemBuilder: (context, index) {
-            String path = musicList[index];
-            return ListTile(
-              onTap: () {
-                _durationCheck();
-                playLocal(path);
-              },
-              title: Text(
-                '${path.substring(path.lastIndexOf('/') + 1, path.lastIndexOf('.'))}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: SizedBox(
-                width: 48,
-                child: currPlay == path
-                    ? IconButton(
-                        icon: Icon(
-                          playState == null
-                              ? Icons.play_arrow_outlined
-                              : playState == AudioPlayerState.PLAYING
-                                  ? Icons.pause
-                                  : Icons.play_arrow_outlined,
-                          color: Color(0xff000000),
-                        ),
-                        onPressed: () {
-                          _durationCheck();
-                          if (playState == AudioPlayerState.PLAYING) {
-                            audioPlayer.pause();
-                          } else if (playState == AudioPlayerState.PAUSED) {
-                            audioPlayer.resume();
-                          } else {
-                            playLocal(path);
-                          }
-                        },
-                      )
-                    : SizedBox(),
-              ),
-            );
+        body: ScrollNoWave(
+          child: ListView.builder(
+            itemBuilder: (context, index) {
+              String path = musicList[index];
+              return ListTile(
+                onTap: () {
+                  _durationCheck();
+                  playLocal(path);
+                },
+                title: Text(
+                  '${path.substring(path.lastIndexOf('/') + 1, path.lastIndexOf('.'))}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: SizedBox(
+                  width: 48,
+                  child: currPlay == path
+                      ? IconButton(
+                          icon: Icon(
+                            playState == null
+                                ? Icons.play_arrow_outlined
+                                : playState == AudioPlayerState.PLAYING
+                                    ? Icons.pause
+                                    : Icons.play_arrow_outlined,
+                            color: Color(0xff000000),
+                          ),
+                          onPressed: () {
+                            _durationCheck();
+                            if (playState == AudioPlayerState.PLAYING) {
+                              audioPlayer.pause();
+                            } else if (playState == AudioPlayerState.PAUSED) {
+                              audioPlayer.resume();
+                            } else {
+                              playLocal(path);
+                            }
+                          },
+                        )
+                      : SizedBox(),
+                ),
+              );
+            },
+            itemCount: musicList.length,
+          ),
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: _navIndex,
+          onTap: (index) {
+            if (index < 2) {
+              setState(() {
+                _navIndex = index;
+              });
+            } else if (index == 2) {
+              // 播放暂停
+            } else if (index == 3) {
+              // 循环模式
+              showCupertinoModalPopup(
+                context: context,
+                builder: (context) {
+                  return CupertinoActionSheet(
+                    title: Text('循环模式'),
+                    message: Text(''),
+                    actions: [
+                      CupertinoActionSheetAction(
+                        child: Text('删除'),
+                        onPressed: () {},
+                        isDefaultAction: true,
+                      ),
+                    ],
+                    cancelButton: CupertinoActionSheetAction(
+                      child: Text('取消'),
+                      onPressed: () {
+                        Navigator.of(context).pop('cancel');
+                      },
+                    ),
+                  );
+                },
+              );
+            } else if (index == 4) {
+              // 定时
+            }
           },
-          itemCount: musicList.length,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.list_bullet),
+              label: '列表',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.heart),
+              label: '收藏',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.play),
+              label: '播放',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.repeat),
+              label: '循环',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.timer),
+              label: '定时',
+            ),
+          ],
         ),
       ),
       onWillPop: () async {
