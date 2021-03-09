@@ -38,12 +38,11 @@ class MyApp extends StatelessWidget {
           ),
           appBarTheme: AppBarTheme(
             brightness: Brightness.light,
-            // textTheme: TextTheme(
-            //   headline6: TextStyle(
-            //     fontSize: 18,
-            //     color: Colors.black,
-            //   ),
-            // ),
+            textTheme: TextTheme(
+              headline6: TextStyle(
+                color: Colors.black,
+              ),
+            ),
             centerTitle: true,
             elevation: 0,
           ),

@@ -233,103 +233,24 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
+  _timeClose(val) {
+    setState(() {
+      _dateTime = DateTime.now();
+      _duration = int.parse(val);
+    });
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: Text('${musicList.length > 0 ? ' 共${musicList.length}首' : ''}'),
+          title: Text('共${musicList.length}首'),
           actions: [
             IconButton(
-              icon: Icon(
-                playState == null
-                    ? Icons.play_arrow_outlined
-                    : playState == AudioPlayerState.PLAYING
-                        ? Icons.pause
-                        : Icons.play_arrow_outlined,
-              ),
-              onPressed: () {
-                _durationCheck();
-                if (playState == AudioPlayerState.PLAYING) {
-                  audioPlayer.pause();
-                } else if (playState == AudioPlayerState.PAUSED) {
-                  audioPlayer.resume();
-                } else {
-                  if (musicList.isNotEmpty) {
-                    if (musicList.contains(currPlay)) {
-                      playLocal(currPlay);
-                    } else {
-                      playLocal(musicList[0]);
-                    }
-                  } else {
-                    _message('无歌曲可播放');
-                  }
-                }
-              },
-            ),
-            PopupMenuButton(
-              initialValue: '$_mode',
-              itemBuilder: (context) {
-                return <PopupMenuEntry<String>>[
-                  PopupMenuItem(
-                    child: Text('顺序循环'),
-                    value: '1',
-                  ),
-                  PopupMenuItem(
-                    child: Text('单曲循环'),
-                    value: '2',
-                  ),
-                ];
-              },
-              icon: Icon(_mode == 1 ? Icons.repeat : Icons.repeat_one),
-              elevation: 1,
-              onSelected: (val) {
-                setState(() {
-                  _mode = int.parse(val);
-                  _setMode(val);
-                });
-              },
-              tooltip: '播放模式',
-            ),
-            PopupMenuButton(
-              initialValue: '$_duration',
-              itemBuilder: (context) {
-                return <PopupMenuEntry<String>>[
-                  PopupMenuItem(
-                    child: Text('不开启'),
-                    value: '0',
-                  ),
-                  PopupMenuItem(
-                    child: Text('15分钟'),
-                    value: '15',
-                  ),
-                  PopupMenuItem(
-                    child: Text('30分钟'),
-                    value: '30',
-                  ),
-                  PopupMenuItem(
-                    child: Text('45分钟'),
-                    value: '45',
-                  ),
-                  PopupMenuItem(
-                    child: Text('60分钟'),
-                    value: '60',
-                  ),
-                ];
-              },
-              icon: Icon(Icons.timer),
-              elevation: 1,
-              onSelected: (val) {
-                setState(() {
-                  _dateTime = DateTime.now();
-                  _duration = int.parse(val);
-                });
-              },
-              tooltip: '定时关闭',
-            ),
-            IconButton(
-              icon: Icon(Icons.refresh_outlined),
+              icon: Icon(CupertinoIcons.refresh),
               onPressed: _getLocalFile,
             ),
           ],
@@ -354,10 +275,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       ? IconButton(
                           icon: Icon(
                             playState == null
-                                ? Icons.play_arrow_outlined
+                                ? CupertinoIcons.play
                                 : playState == AudioPlayerState.PLAYING
-                                    ? Icons.pause
-                                    : Icons.play_arrow_outlined,
+                                    ? CupertinoIcons.pause
+                                    : CupertinoIcons.play,
                             color: Color(0xff000000),
                           ),
                           onPressed: () {
@@ -387,50 +308,158 @@ class _MyHomePageState extends State<MyHomePage> {
                 _navIndex = index;
               });
             } else if (index == 2) {
+              _durationCheck();
+              if (playState == AudioPlayerState.PLAYING) {
+                audioPlayer.pause();
+              } else if (playState == AudioPlayerState.PAUSED) {
+                audioPlayer.resume();
+              } else {
+                if (musicList.isNotEmpty) {
+                  if (musicList.contains(currPlay)) {
+                    playLocal(currPlay);
+                  } else {
+                    playLocal(musicList[0]);
+                  }
+                } else {
+                  _message('无歌曲可播放');
+                }
+              }
               // 播放暂停
             } else if (index == 3) {
               // 循环模式
-              showCupertinoModalPopup(
+              showModalBottomSheet(
                 context: context,
-                builder: (context) {
-                  return CupertinoActionSheet(
-                    title: Text('循环模式'),
-                    message: Text(''),
-                    actions: [
-                      CupertinoActionSheetAction(
-                        child: Text('删除'),
-                        onPressed: () {},
-                        isDefaultAction: true,
+                builder: (BuildContext context) {
+                  return StatefulBuilder(builder: (context1, state) {
+                    return Container(
+                      height: 56 * 2.0,
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: Icon(
+                              CupertinoIcons.checkmark_alt,
+                              color: _mode == 1 ? Colors.black38 : Colors.transparent,
+                            ),
+                            title: Text('顺序循环'),
+                            onTap: () {
+                              setState(() {
+                                _mode = 1;
+                                _setMode('1');
+                                Navigator.pop(context);
+                              });
+                            },
+                          ),
+                          ListTile(
+                            leading: Icon(
+                              CupertinoIcons.checkmark_alt,
+                              color: _mode == 2 ? Colors.black38 : Colors.transparent,
+                            ),
+                            title: Text('单曲循环'),
+                            onTap: () {
+                              setState(() {
+                                _mode = 2;
+                                _setMode('2');
+                                Navigator.pop(context);
+                              });
+                            },
+                          ),
+                        ],
                       ),
-                    ],
-                    cancelButton: CupertinoActionSheetAction(
-                      child: Text('取消'),
-                      onPressed: () {
-                        Navigator.of(context).pop('cancel');
-                      },
-                    ),
-                  );
+                    );
+                  });
                 },
               );
             } else if (index == 4) {
               // 定时
+              showModalBottomSheet(
+                context: context,
+                builder: (BuildContext context) {
+                  return StatefulBuilder(builder: (context1, state) {
+                    return Container(
+                      height: 56 * 5.0,
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: Icon(
+                              CupertinoIcons.checkmark_alt,
+                              color: _duration == 0 ? Colors.black38 : Colors.transparent,
+                            ),
+                            title: Text('不开启'),
+                            onTap: () {
+                              _timeClose('0');
+                            },
+                          ),
+                          ListTile(
+                            leading: Icon(
+                              CupertinoIcons.checkmark_alt,
+                              color: _duration == 15 ? Colors.black38 : Colors.transparent,
+                            ),
+                            title: Text('15分钟'),
+                            onTap: () {
+                              _timeClose('15');
+                            },
+                          ),
+                          ListTile(
+                            leading: Icon(
+                              CupertinoIcons.checkmark_alt,
+                              color: _duration == 30 ? Colors.black38 : Colors.transparent,
+                            ),
+                            title: Text('30分钟'),
+                            onTap: () {
+                              _timeClose('30');
+                            },
+                          ),
+                          ListTile(
+                            leading: Icon(
+                              CupertinoIcons.checkmark_alt,
+                              color: _duration == 45 ? Colors.black38 : Colors.transparent,
+                            ),
+                            title: Text('45分钟'),
+                            onTap: () {
+                              _timeClose('45');
+                            },
+                          ),
+                          ListTile(
+                            leading: Icon(
+                              CupertinoIcons.checkmark_alt,
+                              color: _duration == 60 ? Colors.black38 : Colors.transparent,
+                            ),
+                            title: Text('60分钟'),
+                            onTap: () {
+                              _timeClose('60');
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  });
+                },
+              );
             }
           },
           items: [
             BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.list_bullet),
+              icon: Icon(CupertinoIcons.double_music_note),
+              label: '曲库',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.music_note_list),
               label: '列表',
             ),
             BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.heart),
-              label: '收藏',
+              icon: Icon(playState == null
+                  ? CupertinoIcons.play
+                  : playState == AudioPlayerState.PLAYING
+                      ? CupertinoIcons.pause
+                      : CupertinoIcons.play),
+              label: playState == null
+                  ? '播放'
+                  : playState == AudioPlayerState.PLAYING
+                      ? '暂停'
+                      : '播放',
             ),
             BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.play),
-              label: '播放',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.repeat),
+              icon: Icon(_mode == 1 ? CupertinoIcons.repeat : CupertinoIcons.repeat_1),
               label: '循环',
             ),
             BottomNavigationBarItem(
