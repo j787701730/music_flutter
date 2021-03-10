@@ -36,6 +36,8 @@ class _MyHomePageState extends State<MyHomePage> {
   int _duration = 0;
   int _mode = 1; // 1: 顺序循环, 2: 单曲循环
   int _navIndex = 1;
+  OverlayEntry overlayEntry;
+  int overlayEntryIndex;
 
   // 读取播放歌曲的记录和播放列表
   _getPlay() async {
@@ -82,6 +84,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // 保存当前播放歌曲的记录
   _setMode(mode) async {
+    overlayEntry.remove();
+    overlayEntryIndex = 0;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setInt('mode', int.parse(mode));
   }
@@ -257,11 +261,14 @@ class _MyHomePageState extends State<MyHomePage> {
       _dateTime = DateTime.now();
       _duration = int.parse(val);
     });
-    Navigator.pop(context);
+    overlayEntry.remove();
+    overlayEntryIndex = 0;
   }
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+    double height = MediaQuery.of(context).size.height;
     return WillPopScope(
       child: Scaffold(
         key: _scaffoldKey,
@@ -367,116 +374,144 @@ class _MyHomePageState extends State<MyHomePage> {
               // 播放暂停
             } else if (index == 3) {
               // 循环模式
-              showModalBottomSheet(
-                context: context,
-                barrierColor: Colors.transparent,
-                builder: (BuildContext context) {
-                  return StatefulBuilder(builder: (context1, state) {
-                    return Container(
-                      height: 56 * 2.0,
-                      child: Column(
-                        children: [
-                          ListTile(
-                            leading: Icon(
-                              CupertinoIcons.checkmark_alt,
-                              color: _mode == 1 ? Colors.black38 : Colors.transparent,
-                            ),
-                            title: Text('顺序循环'),
-                            onTap: () {
-                              setState(() {
-                                _mode = 1;
-                                _setMode('1');
-                                Navigator.pop(context);
-                              });
-                            },
-                          ),
-                          ListTile(
-                            leading: Icon(
-                              CupertinoIcons.checkmark_alt,
-                              color: _mode == 2 ? Colors.black38 : Colors.transparent,
-                            ),
-                            title: Text('单曲循环'),
-                            onTap: () {
-                              setState(() {
-                                _mode = 2;
-                                _setMode('2');
-                                Navigator.pop(context);
-                              });
-                            },
-                          ),
-                        ],
+              overlayEntryIndex = 1;
+              overlayEntry = OverlayEntry(builder: (context) {
+                return Stack(
+                  children: [
+                    GestureDetector(
+                      child: Container(
+                        width: width,
+                        height: height,
                       ),
-                    );
-                  });
-                },
-              );
+                      onTap: () {
+                        overlayEntry.remove();
+                        overlayEntryIndex = 0;
+                      },
+                      behavior: HitTestBehavior.opaque,
+                    ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Material(
+                        child: Column(
+                          children: [
+                            ListTile(
+                              leading: Icon(
+                                CupertinoIcons.checkmark_alt,
+                                color: _mode == 1 ? Colors.black38 : Colors.transparent,
+                              ),
+                              title: Text('顺序循环'),
+                              onTap: () {
+                                setState(() {
+                                  _mode = 1;
+                                  _setMode('1');
+                                });
+                              },
+                            ),
+                            ListTile(
+                              leading: Icon(
+                                CupertinoIcons.checkmark_alt,
+                                color: _mode == 2 ? Colors.black38 : Colors.transparent,
+                              ),
+                              title: Text('单曲循环'),
+                              onTap: () {
+                                setState(() {
+                                  _mode = 2;
+                                  _setMode('2');
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  ],
+                );
+              });
+              Overlay.of(context).insert(overlayEntry);
             } else if (index == 4) {
               // 定时
-              showModalBottomSheet(
-                context: context,
-                barrierColor: Colors.transparent,
-                builder: (BuildContext context) {
-                  return StatefulBuilder(builder: (context1, state) {
-                    return Container(
-                      height: 56 * 5.0,
-                      child: Column(
-                        children: [
-                          ListTile(
-                            leading: Icon(
-                              CupertinoIcons.checkmark_alt,
-                              color: _duration == 0 ? Colors.black38 : Colors.transparent,
-                            ),
-                            title: Text('不开启'),
-                            onTap: () {
-                              _timeClose('0');
-                            },
-                          ),
-                          ListTile(
-                            leading: Icon(
-                              CupertinoIcons.checkmark_alt,
-                              color: _duration == 15 ? Colors.black38 : Colors.transparent,
-                            ),
-                            title: Text('15分钟'),
-                            onTap: () {
-                              _timeClose('15');
-                            },
-                          ),
-                          ListTile(
-                            leading: Icon(
-                              CupertinoIcons.checkmark_alt,
-                              color: _duration == 30 ? Colors.black38 : Colors.transparent,
-                            ),
-                            title: Text('30分钟'),
-                            onTap: () {
-                              _timeClose('30');
-                            },
-                          ),
-                          ListTile(
-                            leading: Icon(
-                              CupertinoIcons.checkmark_alt,
-                              color: _duration == 45 ? Colors.black38 : Colors.transparent,
-                            ),
-                            title: Text('45分钟'),
-                            onTap: () {
-                              _timeClose('45');
-                            },
-                          ),
-                          ListTile(
-                            leading: Icon(
-                              CupertinoIcons.checkmark_alt,
-                              color: _duration == 60 ? Colors.black38 : Colors.transparent,
-                            ),
-                            title: Text('60分钟'),
-                            onTap: () {
-                              _timeClose('60');
-                            },
-                          ),
-                        ],
+              overlayEntryIndex = 1;
+              overlayEntry = OverlayEntry(builder: (context) {
+                return Stack(
+                  children: [
+                    GestureDetector(
+                      child: Container(
+                        width: width,
+                        height: height,
                       ),
-                    );
-                  });
-                },
-              );
+                      onTap: () {
+                        overlayEntry.remove();
+                        overlayEntryIndex = 0;
+                      },
+                      behavior: HitTestBehavior.opaque,
+                    ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Material(
+                        child: Column(
+                          children: [
+                            ListTile(
+                              leading: Icon(
+                                CupertinoIcons.checkmark_alt,
+                                color: _duration == 0 ? Colors.black38 : Colors.transparent,
+                              ),
+                              title: Text('不开启'),
+                              onTap: () {
+                                _timeClose('0');
+                              },
+                            ),
+                            ListTile(
+                              leading: Icon(
+                                CupertinoIcons.checkmark_alt,
+                                color: _duration == 15 ? Colors.black38 : Colors.transparent,
+                              ),
+                              title: Text('15分钟'),
+                              onTap: () {
+                                _timeClose('15');
+                              },
+                            ),
+                            ListTile(
+                              leading: Icon(
+                                CupertinoIcons.checkmark_alt,
+                                color: _duration == 30 ? Colors.black38 : Colors.transparent,
+                              ),
+                              title: Text('30分钟'),
+                              onTap: () {
+                                _timeClose('30');
+                              },
+                            ),
+                            ListTile(
+                              leading: Icon(
+                                CupertinoIcons.checkmark_alt,
+                                color: _duration == 45 ? Colors.black38 : Colors.transparent,
+                              ),
+                              title: Text('45分钟'),
+                              onTap: () {
+                                _timeClose('45');
+                              },
+                            ),
+                            ListTile(
+                              leading: Icon(
+                                CupertinoIcons.checkmark_alt,
+                                color: _duration == 60 ? Colors.black38 : Colors.transparent,
+                              ),
+                              title: Text('60分钟'),
+                              onTap: () {
+                                _timeClose('60');
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  ],
+                );
+              });
+              Overlay.of(context).insert(overlayEntry);
             }
           },
           items: [
@@ -505,13 +540,18 @@ class _MyHomePageState extends State<MyHomePage> {
               label: '循环',
             ),
             BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.timer),
+              icon: Icon(_duration == 0 ? CupertinoIcons.time : CupertinoIcons.timer),
               label: '定时',
             ),
           ],
         ),
       ),
       onWillPop: () async {
+        if (overlayEntryIndex == 1) {
+          overlayEntry.remove();
+          overlayEntryIndex = 0;
+          return false;
+        }
         if (_lastQuitTime == null || DateTime.now().difference(_lastQuitTime).inSeconds > 1) {
           _message('再按一次 Back 按钮退出');
           _lastQuitTime = DateTime.now();
