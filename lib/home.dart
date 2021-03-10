@@ -31,6 +31,7 @@ class _MyHomePageState extends State<MyHomePage> {
   StreamSubscription _playerErrorSubscription;
   StreamSubscription _playerCompleteSubscription;
   List musicList = [];
+  List<String> playList = [];
   DateTime _dateTime;
   int _duration = 0;
   int _mode = 1; // 1: 顺序循环, 2: 单曲循环
@@ -39,8 +40,22 @@ class _MyHomePageState extends State<MyHomePage> {
   // 读取播放歌曲的记录
   _getPlay() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    List playListTemp = prefs.getStringList('playList');
     String lastPlaySong = prefs.getString('lastPlaySong');
     int mode = prefs.getInt('mode');
+
+    if (playListTemp != null) {
+      List<String> arr = [];
+      playListTemp.forEach((element) {
+        if (musicList.contains(element)) {
+          arr.add(element);
+        }
+      });
+      setState(() {
+        playList = arr;
+      });
+    }
+
     if (lastPlaySong != null) {
       setState(() {
         currPlay = lastPlaySong;
@@ -58,6 +73,11 @@ class _MyHomePageState extends State<MyHomePage> {
   _setPlay(path) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('lastPlaySong', path);
+  }
+
+  _setPlayList() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setStringList('playList', playList);
   }
 
   // 保存当前播放歌曲的记录
@@ -133,6 +153,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if (!mounted) return;
       setState(() {
         musicList = arr;
+        _getPlay();
       });
     }
   }
@@ -152,15 +173,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // 获取下一首歌曲
   String _getNext() {
-    int index = musicList.indexOf(currPlay);
+    int index = playList.indexOf(currPlay);
     if (_mode == 1) {
-      if (index != musicList.length - 1) {
-        return musicList[index + 1];
+      if (index != playList.length - 1) {
+        return playList[index + 1];
       } else {
-        return musicList[0];
+        return playList[0];
       }
     } else {
-      return musicList[index];
+      return playList[index];
     }
   }
 
@@ -183,8 +204,6 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     audioPlayer = AudioPlayer();
     _getLocalFile();
-    _getPlay();
-
     // 播放状态
     _playerStateSubscription = audioPlayer.onPlayerStateChanged.listen((AudioPlayerState s) {
       // print('Current player state: $s ');
@@ -247,7 +266,7 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: Text('共${musicList.length}首'),
+          title: Text(_navIndex == 0 ? '共${musicList.length}首' : '共${playList.length}首'),
           actions: [
             IconButton(
               icon: Icon(CupertinoIcons.refresh),
@@ -258,7 +277,7 @@ class _MyHomePageState extends State<MyHomePage> {
         body: ScrollNoWave(
           child: ListView.builder(
             itemBuilder: (context, index) {
-              String path = musicList[index];
+              String path = _navIndex == 0 ? musicList[index] : playList[index];
               return ListTile(
                 onTap: () {
                   _durationCheck();
@@ -271,32 +290,53 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 trailing: SizedBox(
                   width: 48,
-                  child: currPlay == path
-                      ? IconButton(
-                          icon: Icon(
-                            playState == null
-                                ? CupertinoIcons.play
-                                : playState == AudioPlayerState.PLAYING
-                                    ? CupertinoIcons.pause
-                                    : CupertinoIcons.play,
-                            color: Color(0xff000000),
-                          ),
-                          onPressed: () {
-                            _durationCheck();
-                            if (playState == AudioPlayerState.PLAYING) {
-                              audioPlayer.pause();
-                            } else if (playState == AudioPlayerState.PAUSED) {
-                              audioPlayer.resume();
-                            } else {
-                              playLocal(path);
-                            }
-                          },
-                        )
-                      : SizedBox(),
+                  child: _navIndex == 0
+                      ? playList.contains(path)
+                          ? SizedBox()
+                          : IconButton(
+                              icon: Icon(CupertinoIcons.add),
+                              onPressed: () {
+                                setState(() {
+                                  playList.add(path);
+                                  _setPlayList();
+                                });
+                              },
+                            )
+                      : currPlay == path
+                          ? IconButton(
+                              icon: Icon(
+                                playState == null
+                                    ? CupertinoIcons.play
+                                    : playState == AudioPlayerState.PLAYING
+                                        ? CupertinoIcons.pause
+                                        : CupertinoIcons.play,
+                              ),
+                              onPressed: () {
+                                _durationCheck();
+                                if (playState == AudioPlayerState.PLAYING) {
+                                  audioPlayer.pause();
+                                } else if (playState == AudioPlayerState.PAUSED) {
+                                  audioPlayer.resume();
+                                } else {
+                                  playLocal(path);
+                                }
+                              },
+                            )
+                          : IconButton(
+                              icon: Icon(CupertinoIcons.clear),
+                              onPressed: () {
+                                setState(
+                                  () {
+                                    playList.remove(path);
+                                    _setPlayList();
+                                  },
+                                );
+                              },
+                            ),
                 ),
               );
             },
-            itemCount: musicList.length,
+            itemCount: _navIndex == 0 ? musicList.length : playList.length,
           ),
         ),
         bottomNavigationBar: BottomNavigationBar(
@@ -314,11 +354,11 @@ class _MyHomePageState extends State<MyHomePage> {
               } else if (playState == AudioPlayerState.PAUSED) {
                 audioPlayer.resume();
               } else {
-                if (musicList.isNotEmpty) {
-                  if (musicList.contains(currPlay)) {
+                if (playList.isNotEmpty) {
+                  if (playList.contains(currPlay)) {
                     playLocal(currPlay);
                   } else {
-                    playLocal(musicList[0]);
+                    playLocal(playList[0]);
                   }
                 } else {
                   _message('无歌曲可播放');
