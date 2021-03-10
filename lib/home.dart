@@ -369,6 +369,7 @@ class _MyHomePageState extends State<MyHomePage> {
               // 循环模式
               showModalBottomSheet(
                 context: context,
+                barrierColor: Colors.transparent,
                 builder: (BuildContext context) {
                   return StatefulBuilder(builder: (context1, state) {
                     return Container(
@@ -413,6 +414,7 @@ class _MyHomePageState extends State<MyHomePage> {
               // 定时
               showModalBottomSheet(
                 context: context,
+                barrierColor: Colors.transparent,
                 builder: (BuildContext context) {
                   return StatefulBuilder(builder: (context1, state) {
                     return Container(
