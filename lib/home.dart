@@ -36,6 +36,8 @@ class _MyHomePageState extends State<MyHomePage> {
   int _duration = 0;
   int _mode = 1; // 1: 顺序循环, 2: 单曲循环
   int _navIndex = 1;
+
+  // 自定义弹框
   OverlayEntry overlayEntry;
   int overlayEntryIndex;
 
