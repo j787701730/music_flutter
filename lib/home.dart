@@ -37,7 +37,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _mode = 1; // 1: 顺序循环, 2: 单曲循环
   int _navIndex = 1;
 
-  // 读取播放歌曲的记录
+  // 读取播放歌曲的记录和播放列表
   _getPlay() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     List playListTemp = prefs.getStringList('playList');
