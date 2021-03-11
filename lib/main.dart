@@ -18,12 +18,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnnotatedRegion(
       child: MaterialApp(
-        title: '本地音乐播发器墨水屏版',
+        title: '本地音乐播放器墨水屏版',
         themeMode: ThemeMode.light,
         theme: ThemeData(
           // primarySwatch: Colors.blue,
           primaryColor: Colors.white,
           brightness: Brightness.light,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
           // cupertinoOverrideTheme: CupertinoThemeData(
           //   brightness: Brightness.light,
           // ),
@@ -34,6 +36,9 @@ class MyApp extends StatelessWidget {
             bodyText2: TextStyle(
               fontSize: 14,
               color: Colors.black,
+            ),
+            subtitle1: TextStyle(
+              fontSize: 14,
             ),
           ),
           appBarTheme: AppBarTheme(
@@ -53,8 +58,8 @@ class MyApp extends StatelessWidget {
             unselectedIconTheme: IconThemeData(
               size: 20,
             ),
-            selectedItemColor: Colors.blue,
-            unselectedItemColor: Color(0xff333333),
+            selectedItemColor: Color(0xff000000),
+            unselectedItemColor: Color(0xff999999),
             showUnselectedLabels: true,
             selectedLabelStyle: TextStyle(
               fontSize: 12,

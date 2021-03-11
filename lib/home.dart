@@ -275,7 +275,7 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: Text(_navIndex == 0 ? '共${musicList.length}首' : '共${playList.length}首'),
+          title: Text(_navIndex == 0 ? '曲库共${musicList.length}首' : '列表共${playList.length}首'),
           actions: [
             IconButton(
               icon: Icon(CupertinoIcons.refresh),
