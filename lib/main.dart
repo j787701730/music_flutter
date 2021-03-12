@@ -67,7 +67,6 @@ class MyApp extends StatelessWidget {
             unselectedLabelStyle: TextStyle(
               fontSize: 12,
             ),
-            elevation: 1,
           ),
         ),
         home: MyHomePage(title: '本地音乐播发器墨水屏版'),

@@ -261,7 +261,7 @@ class _MyHomePageState extends State<MyHomePage> {
   _timeClose(val) {
     setState(() {
       _dateTime = DateTime.now();
-      _duration = int.parse(val);
+      _duration = val;
     });
     overlayEntry.remove();
     overlayEntryIndex = 0;
@@ -271,6 +271,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
+    double onePx = 1 / MediaQuery.of(context).devicePixelRatio;
     return WillPopScope(
       child: Scaffold(
         key: _scaffoldKey,
@@ -278,7 +279,10 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text(_navIndex == 0 ? '曲库共${musicList.length}首' : '列表共${playList.length}首'),
           actions: [
             IconButton(
-              icon: Icon(CupertinoIcons.refresh),
+              icon: Icon(
+                CupertinoIcons.refresh,
+                size: 20,
+              ),
               onPressed: _getLocalFile,
             ),
           ],
@@ -291,6 +295,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 onTap: () {
                   _durationCheck();
                   playLocal(path);
+                  if (_navIndex == 0 && !playList.contains(path)) {
+                    setState(() {
+                      playList.insert(0, path);
+                      _setPlayList();
+                    });
+                  }
                 },
                 title: Text(
                   '${path.substring(path.lastIndexOf('/') + 1, path.lastIndexOf('.'))}',
@@ -301,9 +311,33 @@ class _MyHomePageState extends State<MyHomePage> {
                   width: 48,
                   child: _navIndex == 0
                       ? playList.contains(path)
-                          ? SizedBox()
+                          ? currPlay == path
+                              ? IconButton(
+                                  icon: Icon(
+                                    playState == null
+                                        ? CupertinoIcons.play
+                                        : playState == AudioPlayerState.PLAYING
+                                            ? CupertinoIcons.pause
+                                            : CupertinoIcons.play,
+                                    size: 20,
+                                  ),
+                                  onPressed: () {
+                                    _durationCheck();
+                                    if (playState == AudioPlayerState.PLAYING) {
+                                      audioPlayer.pause();
+                                    } else if (playState == AudioPlayerState.PAUSED) {
+                                      audioPlayer.resume();
+                                    } else {
+                                      playLocal(path);
+                                    }
+                                  },
+                                )
+                              : SizedBox()
                           : IconButton(
-                              icon: Icon(CupertinoIcons.add),
+                              icon: Icon(
+                                CupertinoIcons.add,
+                                size: 20,
+                              ),
                               onPressed: () {
                                 setState(() {
                                   playList.add(path);
@@ -319,6 +353,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     : playState == AudioPlayerState.PLAYING
                                         ? CupertinoIcons.pause
                                         : CupertinoIcons.play,
+                                size: 20,
                               ),
                               onPressed: () {
                                 _durationCheck();
@@ -332,7 +367,10 @@ class _MyHomePageState extends State<MyHomePage> {
                               },
                             )
                           : IconButton(
-                              icon: Icon(CupertinoIcons.clear),
+                              icon: Icon(
+                                CupertinoIcons.clear,
+                                size: 20,
+                              ),
                               onPressed: () {
                                 setState(
                                   () {
@@ -396,35 +434,47 @@ class _MyHomePageState extends State<MyHomePage> {
                       right: 0,
                       bottom: 0,
                       child: Material(
-                        child: Column(
-                          children: [
-                            ListTile(
-                              leading: Icon(
-                                CupertinoIcons.checkmark_alt,
-                                color: _mode == 1 ? Colors.black38 : Colors.transparent,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: BorderSide(
+                                color: Color(0xff999999),
+                                width: onePx,
                               ),
-                              title: Text('顺序循环'),
-                              onTap: () {
-                                setState(() {
-                                  _mode = 1;
-                                  _setMode('1');
-                                });
-                              },
                             ),
-                            ListTile(
-                              leading: Icon(
-                                CupertinoIcons.checkmark_alt,
-                                color: _mode == 2 ? Colors.black38 : Colors.transparent,
+                          ),
+                          child: Column(
+                            children: [
+                              ListTile(
+                                leading: Icon(
+                                  CupertinoIcons.checkmark_alt,
+                                  color: _mode == 1 ? Colors.black38 : Colors.transparent,
+                                  size: 20,
+                                ),
+                                title: Text('顺序循环'),
+                                onTap: () {
+                                  setState(() {
+                                    _mode = 1;
+                                    _setMode('1');
+                                  });
+                                },
                               ),
-                              title: Text('单曲循环'),
-                              onTap: () {
-                                setState(() {
-                                  _mode = 2;
-                                  _setMode('2');
-                                });
-                              },
-                            ),
-                          ],
+                              ListTile(
+                                leading: Icon(
+                                  CupertinoIcons.checkmark_alt,
+                                  color: _mode == 2 ? Colors.black38 : Colors.transparent,
+                                  size: 20,
+                                ),
+                                title: Text('单曲循环'),
+                                onTap: () {
+                                  setState(() {
+                                    _mode = 2;
+                                    _setMode('2');
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     )
@@ -454,62 +504,33 @@ class _MyHomePageState extends State<MyHomePage> {
                       right: 0,
                       bottom: 0,
                       child: Material(
-                        child: Column(
-                          children: [
-                            ListTile(
-                              leading: Icon(
-                                CupertinoIcons.checkmark_alt,
-                                color: _duration == 0 ? Colors.black38 : Colors.transparent,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: BorderSide(
+                                color: Color(0xff999999),
+                                width: onePx,
                               ),
-                              title: Text('不开启'),
-                              onTap: () {
-                                _timeClose('0');
-                              },
                             ),
-                            ListTile(
-                              leading: Icon(
-                                CupertinoIcons.checkmark_alt,
-                                color: _duration == 15 ? Colors.black38 : Colors.transparent,
-                              ),
-                              title: Text('15分钟'),
-                              onTap: () {
-                                _timeClose('15');
-                              },
-                            ),
-                            ListTile(
-                              leading: Icon(
-                                CupertinoIcons.checkmark_alt,
-                                color: _duration == 30 ? Colors.black38 : Colors.transparent,
-                              ),
-                              title: Text('30分钟'),
-                              onTap: () {
-                                _timeClose('30');
-                              },
-                            ),
-                            ListTile(
-                              leading: Icon(
-                                CupertinoIcons.checkmark_alt,
-                                color: _duration == 45 ? Colors.black38 : Colors.transparent,
-                              ),
-                              title: Text('45分钟'),
-                              onTap: () {
-                                _timeClose('45');
-                              },
-                            ),
-                            ListTile(
-                              leading: Icon(
-                                CupertinoIcons.checkmark_alt,
-                                color: _duration == 60 ? Colors.black38 : Colors.transparent,
-                              ),
-                              title: Text('60分钟'),
-                              onTap: () {
-                                _timeClose('60');
-                              },
-                            ),
-                          ],
+                          ),
+                          child: Column(
+                            children: [0, 15, 30, 45, 60].map<Widget>((item) {
+                              return ListTile(
+                                leading: Icon(
+                                  CupertinoIcons.checkmark_alt,
+                                  color: _duration == item ? Colors.black38 : Colors.transparent,
+                                  size: 20,
+                                ),
+                                title: Text(item == 0 ? '不开启' : '$item分钟'),
+                                onTap: () {
+                                  _timeClose(item);
+                                },
+                              );
+                            }).toList(),
+                          ),
                         ),
                       ),
-                    )
+                    ),
                   ],
                 );
               });
