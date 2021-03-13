@@ -276,6 +276,12 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
+          shape: Border(
+            bottom: BorderSide(
+              color: Colors.black,
+              width: onePx,
+            ),
+          ),
           title: Text(_navIndex == 0 ? '曲库共${musicList.length}首' : '列表共${playList.length}首'),
           actions: [
             IconButton(
@@ -386,187 +392,197 @@ class _MyHomePageState extends State<MyHomePage> {
             itemCount: _navIndex == 0 ? musicList.length : playList.length,
           ),
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          currentIndex: _navIndex,
-          onTap: (index) {
-            if (index < 2) {
-              setState(() {
-                _navIndex = index;
-              });
-            } else if (index == 2) {
-              _durationCheck();
-              if (playState == AudioPlayerState.PLAYING) {
-                audioPlayer.pause();
-              } else if (playState == AudioPlayerState.PAUSED) {
-                audioPlayer.resume();
-              } else {
-                if (playList.isNotEmpty) {
-                  if (playList.contains(currPlay)) {
-                    playLocal(currPlay);
-                  } else {
-                    playLocal(playList[0]);
-                  }
+        bottomNavigationBar: Material(
+          child: BottomNavigationBar(
+            elevation: 0,
+            // backgroundColor: Colors.white,
+            type: BottomNavigationBarType.fixed,
+            currentIndex: _navIndex,
+            onTap: (index) {
+              if (index < 2) {
+                setState(() {
+                  _navIndex = index;
+                });
+              } else if (index == 2) {
+                _durationCheck();
+                if (playState == AudioPlayerState.PLAYING) {
+                  audioPlayer.pause();
+                } else if (playState == AudioPlayerState.PAUSED) {
+                  audioPlayer.resume();
                 } else {
-                  _message('无歌曲可播放');
+                  if (playList.isNotEmpty) {
+                    if (playList.contains(currPlay)) {
+                      playLocal(currPlay);
+                    } else {
+                      playLocal(playList[0]);
+                    }
+                  } else {
+                    _message('列表中无歌曲可播放');
+                  }
                 }
+                // 播放暂停
+              } else if (index == 3) {
+                // 循环模式
+                overlayEntryIndex = 1;
+                overlayEntry = OverlayEntry(builder: (context) {
+                  return Stack(
+                    children: [
+                      GestureDetector(
+                        child: Container(
+                          width: width,
+                          height: height,
+                        ),
+                        onTap: () {
+                          overlayEntry.remove();
+                          overlayEntryIndex = 0;
+                        },
+                        behavior: HitTestBehavior.opaque,
+                      ),
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Material(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                top: BorderSide(
+                                  color: Color(0xff999999),
+                                  width: onePx,
+                                ),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                ListTile(
+                                  leading: Icon(
+                                    CupertinoIcons.checkmark_alt,
+                                    color: _mode == 1 ? Colors.black38 : Colors.transparent,
+                                    size: 20,
+                                  ),
+                                  title: Text('顺序循环'),
+                                  onTap: () {
+                                    setState(() {
+                                      _mode = 1;
+                                      _setMode('1');
+                                    });
+                                  },
+                                ),
+                                ListTile(
+                                  leading: Icon(
+                                    CupertinoIcons.checkmark_alt,
+                                    color: _mode == 2 ? Colors.black38 : Colors.transparent,
+                                    size: 20,
+                                  ),
+                                  title: Text('单曲循环'),
+                                  onTap: () {
+                                    setState(() {
+                                      _mode = 2;
+                                      _setMode('2');
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                    ],
+                  );
+                });
+                Overlay.of(context).insert(overlayEntry);
+              } else if (index == 4) {
+                // 定时
+                overlayEntryIndex = 1;
+                overlayEntry = OverlayEntry(builder: (context) {
+                  return Stack(
+                    children: [
+                      GestureDetector(
+                        child: Container(
+                          width: width,
+                          height: height,
+                        ),
+                        onTap: () {
+                          overlayEntry.remove();
+                          overlayEntryIndex = 0;
+                        },
+                        behavior: HitTestBehavior.opaque,
+                      ),
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Material(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                top: BorderSide(
+                                  color: Color(0xff999999),
+                                  width: onePx,
+                                ),
+                              ),
+                            ),
+                            child: Column(
+                              children: [0, 15, 30, 45, 60].map<Widget>((item) {
+                                return ListTile(
+                                  leading: Icon(
+                                    CupertinoIcons.checkmark_alt,
+                                    color: _duration == item ? Colors.black38 : Colors.transparent,
+                                    size: 20,
+                                  ),
+                                  title: Text(item == 0 ? '不开启' : '$item分钟'),
+                                  onTap: () {
+                                    _timeClose(item);
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                });
+                Overlay.of(context).insert(overlayEntry);
               }
-              // 播放暂停
-            } else if (index == 3) {
-              // 循环模式
-              overlayEntryIndex = 1;
-              overlayEntry = OverlayEntry(builder: (context) {
-                return Stack(
-                  children: [
-                    GestureDetector(
-                      child: Container(
-                        width: width,
-                        height: height,
-                      ),
-                      onTap: () {
-                        overlayEntry.remove();
-                        overlayEntryIndex = 0;
-                      },
-                      behavior: HitTestBehavior.opaque,
-                    ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: Material(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border(
-                              top: BorderSide(
-                                color: Color(0xff999999),
-                                width: onePx,
-                              ),
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              ListTile(
-                                leading: Icon(
-                                  CupertinoIcons.checkmark_alt,
-                                  color: _mode == 1 ? Colors.black38 : Colors.transparent,
-                                  size: 20,
-                                ),
-                                title: Text('顺序循环'),
-                                onTap: () {
-                                  setState(() {
-                                    _mode = 1;
-                                    _setMode('1');
-                                  });
-                                },
-                              ),
-                              ListTile(
-                                leading: Icon(
-                                  CupertinoIcons.checkmark_alt,
-                                  color: _mode == 2 ? Colors.black38 : Colors.transparent,
-                                  size: 20,
-                                ),
-                                title: Text('单曲循环'),
-                                onTap: () {
-                                  setState(() {
-                                    _mode = 2;
-                                    _setMode('2');
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    )
-                  ],
-                );
-              });
-              Overlay.of(context).insert(overlayEntry);
-            } else if (index == 4) {
-              // 定时
-              overlayEntryIndex = 1;
-              overlayEntry = OverlayEntry(builder: (context) {
-                return Stack(
-                  children: [
-                    GestureDetector(
-                      child: Container(
-                        width: width,
-                        height: height,
-                      ),
-                      onTap: () {
-                        overlayEntry.remove();
-                        overlayEntryIndex = 0;
-                      },
-                      behavior: HitTestBehavior.opaque,
-                    ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: Material(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border(
-                              top: BorderSide(
-                                color: Color(0xff999999),
-                                width: onePx,
-                              ),
-                            ),
-                          ),
-                          child: Column(
-                            children: [0, 15, 30, 45, 60].map<Widget>((item) {
-                              return ListTile(
-                                leading: Icon(
-                                  CupertinoIcons.checkmark_alt,
-                                  color: _duration == item ? Colors.black38 : Colors.transparent,
-                                  size: 20,
-                                ),
-                                title: Text(item == 0 ? '不开启' : '$item分钟'),
-                                onTap: () {
-                                  _timeClose(item);
-                                },
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              });
-              Overlay.of(context).insert(overlayEntry);
-            }
-          },
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.double_music_note),
-              label: '曲库',
+            },
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(CupertinoIcons.double_music_note),
+                label: '曲库',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(CupertinoIcons.music_note_list),
+                label: '列表',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(playState == null
+                    ? CupertinoIcons.play
+                    : playState == AudioPlayerState.PLAYING
+                        ? CupertinoIcons.pause
+                        : CupertinoIcons.play),
+                label: playState == null
+                    ? '播放'
+                    : playState == AudioPlayerState.PLAYING
+                        ? '暂停'
+                        : '播放',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(_mode == 1 ? CupertinoIcons.repeat : CupertinoIcons.repeat_1),
+                label: '循环',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(_duration == 0 ? CupertinoIcons.time : CupertinoIcons.timer),
+                label: '定时',
+              ),
+            ],
+          ),
+          shape: Border(
+            top: BorderSide(
+              color: Colors.black,
+              width: onePx,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.music_note_list),
-              label: '列表',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(playState == null
-                  ? CupertinoIcons.play
-                  : playState == AudioPlayerState.PLAYING
-                      ? CupertinoIcons.pause
-                      : CupertinoIcons.play),
-              label: playState == null
-                  ? '播放'
-                  : playState == AudioPlayerState.PLAYING
-                      ? '暂停'
-                      : '播放',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(_mode == 1 ? CupertinoIcons.repeat : CupertinoIcons.repeat_1),
-              label: '循环',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(_duration == 0 ? CupertinoIcons.time : CupertinoIcons.timer),
-              label: '定时',
-            ),
-          ],
+          ),
         ),
       ),
       onWillPop: () async {

@@ -67,9 +67,11 @@ class MyApp extends StatelessWidget {
             unselectedLabelStyle: TextStyle(
               fontSize: 12,
             ),
+            elevation: 0,
+            backgroundColor: Colors.white,
           ),
         ),
-        home: MyHomePage(title: '本地音乐播发器墨水屏版'),
+        home: MyHomePage(),
         debugShowCheckedModeBanner: false,
         routes: <String, WidgetBuilder>{
           '/home': (_) => MyHomePage(),
